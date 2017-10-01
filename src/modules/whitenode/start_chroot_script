@@ -21,9 +21,6 @@ apt-get update
 apt-get install -y ntp unzip git build-essential libdb-dev libdb++-dev libboost-all-dev libqrencode-dev miniupnpc libminiupnpc-dev zlib1g-dev pwgen
 
 #create Whitecoin config file
-mkdir /home/pi/.whitecoin-xwc
-touch /home/pi/.whitecoin-xwc/whitecoin.conf
-
 rpcu=$(pwgen -ncsB 35 1)
 rpcp=$(pwgen -ncsB 75 1)
 
@@ -50,8 +47,6 @@ strip whitecoind
 # copy whitecoind to other place
 cp -R -r -p whitecoind /usr/local/bin/
 
-
-
 # cleanup
 rm -rf /opt/whitecoin
 
@@ -75,8 +70,6 @@ if [ "$WHITECOIN_OVERRIDE_PASSWORD" != "default" ]
 then
     echo "pi:$WHITECOIN_OVERRIDE_PASSWORD" | chpasswd
 fi
-
-# Unpack root at the end, so files are modified before
 
 echo "exit 0" >> /etc/rc.local
 
