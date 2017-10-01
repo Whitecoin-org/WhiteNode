@@ -13,7 +13,7 @@ install_cleanup_trap
 
 unpack /filesystem/home/pi /home/pi pi
 unpack /filesystem/boot /boot
-unpack /filesystem/root_init /
+unpack /filesystem/root /
 
 apt-get update
 
@@ -41,7 +41,7 @@ make install
 git clone https://github.com/Whitecoin-org/whitecoin /opt/whitecoin
 cd /opt/whitecoin/src/ && make -f makefile.unix OPENSSL_INCLUDE_PATH=/usr/src/openssl-1.0.2k/include OPENSSL_LIB_PATH=/usr/src/openssl-1.0.2k/lib
 
-# strip whitecoind
+#strip whitecoind
 strip whitecoind
 
 # copy whitecoind to other place
@@ -65,13 +65,22 @@ then
     update-locale LANG="$WHITECOIN_OVERRIDE_LOCALE"
 fi
 
+#override password
+if [ "$WHITECOIN_OVERRIDE_PASSWORD" != "default" ]
+then
+    echo "pi:$WHITECOIN_OVERRIDE_PASSWORD" | chpasswd
+fi
+
 echo "exit 0" >> /etc/rc.local
 
-#set systemd startup files
-systemctl enable whitecoin.service
+echo "server time.nist.gov" >> /etc/ntp.conf
+echo "server ntp.ubuntu.com" >> /etc/ntp.conf
 
-# cleanup
+#set systemd startup files
+systemctl daemon-reload
+systemctl start whitecoin
+systemctl enable whitecoin
+
+#cleanup
 apt-get clean
 apt-get autoremove -y
-
-unpack /filesystem/root /
