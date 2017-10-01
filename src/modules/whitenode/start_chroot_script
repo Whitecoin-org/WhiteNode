@@ -28,12 +28,7 @@ rpcu=$(pwgen -ncsB 35 1)
 rpcp=$(pwgen -ncsB 75 1)
 
 echo "rpcuser=$rpcu
-rpcpassword=$rpcp
-server=1
-daemon=1
-listen=1
-rpcallowip=127.0.0.1
-maxconnections=100" > /home/pi/.whitecoin-xwc/whitecoin.conf
+rpcpassword=$rpcp" >> /home/pi/.whitecoin-xwc/whitecoin.conf
 
 # compile openssl from source
 cd /usr/src
@@ -49,8 +44,13 @@ make install
 git clone https://github.com/Whitecoin-org/whitecoin /opt/whitecoin
 cd /opt/whitecoin/src/ && make -f makefile.unix OPENSSL_INCLUDE_PATH=/usr/src/openssl-1.0.2k/include OPENSSL_LIB_PATH=/usr/src/openssl-1.0.2k/lib
 
+#strip whitecoind
+strip whitecoind
+
 # copy whitecoind to other place
 cp -R -r -p whitecoind /usr/local/bin/
+
+
 
 # cleanup
 rm -rf /opt/whitecoin
