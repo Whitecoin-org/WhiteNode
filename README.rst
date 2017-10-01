@@ -10,7 +10,7 @@ This repository contains the source script to generate the distribution out of a
 Where to get it?
 ----------------
 
-Download the compile images from  `here <https://github.com/Whitecoin-org/WhiteNode/releases>`_
+Download the compiled images from  `here <https://github.com/Whitecoin-org/WhiteNode/releases>`_
 
 How to use it?
 --------------
