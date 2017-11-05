@@ -1,0 +1,23 @@
+#!/bin/bash
+if [ ! -f /etc/firstboot ]; then
+	rpcu=$(pwgen -ncsB 35 1)
+	rpcp=$(pwgen -ncsB 75 1)
+	
+	echo "rpcuser=$rpcu
+rpcpassword=$rpcp" >> /home/pi/.whitecoin-xwc/whitecoin.conf
+	
+	sudo tzupdate
+	
+    sudo touch /etc/firstboot
+fi
+
+if [ -f /boot/wallet/wallet.dat ]; then
+		if [ -f /home/pi/.whitecoin-xwc/wallet.dat ]; then
+			DATE=`date '+%Y%m%d%H%M%S'`
+		
+			mv /home/pi/.whitecoin-xwc/wallet.dat /home/pi/.whitecoin-xwc/wallet_${DATE}.dat
+		fi
+		
+		mv /boot/wallet/wallet.dat /home/pi/.whitecoin-xwc/wallet.dat
+		chown pi.pi /home/pi/.whitecoin-xwc/wallet.dat
+fi

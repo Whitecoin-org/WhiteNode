@@ -1,0 +1,7 @@
+[Unit]
+Description=on first boot generate RPC user and pass for Whitecoind
+[Service]
+ExecStart=/home/pi/scripts/firstboot
+ExecStop=
+[Install]
+WantedBy=multi-user.target

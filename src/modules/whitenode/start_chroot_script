@@ -15,63 +15,130 @@ unpack /filesystem/home/pi /home/pi pi
 unpack /filesystem/boot /boot
 unpack /filesystem/root_init /
 
-apt-get update
+apt-get update -y
+apt-get upgrade -y
 
 #install needed files
-apt-get install -y ntp unzip git build-essential libdb-dev libdb++-dev libboost-all-dev libqrencode-dev miniupnpc libminiupnpc-dev zlib1g-dev pwgen
+apt-get install -y ntp unzip git build-essential libdb-dev libdb++-dev libboost-all-dev libqrencode-dev miniupnpc libminiupnpc-dev zlib1g-dev pwgen libssl-dev python-pip
 
-#create Whitecoin config file
-rpcu=$(pwgen -ncsB 35 1)
-rpcp=$(pwgen -ncsB 75 1)
+# install PHP 7 and NGINX from Stretch Repo
+apt-get install -t stretch -y php7.0 php7.0-curl php7.0-gd php7.0-fpm php7.0-cli php7.0-opcache php7.0-mbstring php7.0-xml php7.0-zip php7.0-intl nginx-light
 
-echo "rpcuser=$rpcu
-rpcpassword=$rpcp" >> /home/pi/.whitecoin-xwc/whitecoin.conf
+# set correct timezone
+pip install -U tzupdate
+
+#update startup scripts
+update-rc.d nginx defaults
+update-rc.d php7.0-fpm defaults
+
+# Generate RPC first Boot
+chmod +x /home/pi/scripts/firstboot
+systemctl enable whitenode_first_boot.service
+
+# Startup Whitecoin service
+systemctl enable whitecoin.service
+
+#nginx config file
+cat > /etc/nginx/sites-enabled/default << "EOF"
+# Default server configuration
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        root /var/www/public;
+
+        index index.html index.htm index.php default.html;
+
+        server_name _;
+
+        location / {
+                if (-f $request_filename) {
+                    break;
+                }
+                rewrite ^/(.*)$ /index.php?rewriteurl=$1 last;
+        }
+
+        # pass the PHP scripts to FastCGI server
+        location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+                fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+        }
+
+         location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+                expires max;
+                log_not_found off;
+        }
+
+        # deny access to .htaccess files, should an Apache document root conflict with nginx
+        location ~ /\.ht {
+                deny all;
+        }
+}
+
+EOF
+
+#create nginx docroot folders and set permissions
+mkdir -p /var/www/{public,private,logs,backup,vhosts}
+chown -R www-data:pi /var/www
+chmod -R 775 /var/www
+
+usermod -aG www-data pi
+
+# prepare interface
+cd /var/www/public
+git clone https://github.com/Oizopower/WhiteNode-GUI.git .
+chown -R www-data:pi /var/www
 
 # compile openssl from source
 cd /usr/src
-wget https://www.openssl.org/source/openssl-1.0.2k.tar.gz
-tar zxvf openssl-1.0.2k.tar.gz
-cd openssl-1.0.2k
-export CFLAGS="-fPIC"
-./config --prefix=/usr --openssldir=/usr/local/openssl shared enable-ec enable-ecdh enable-ecdsa
-make all
+
+if [ "$WHITECOIN_COMPILE_FROM_SOURCE" != "yes" ]
+then
+	curl --location http://oizopower.nl/openssl-1.0.2k.zip > /usr/src/openssl-1.0.2k.zip
+	unzip openssl-1.0.2k.zip
+	cd openssl-1.0.2k
+else
+	wget https://www.openssl.org/source/openssl-1.0.2k.tar.gz
+	tar zxvf openssl-1.0.2k.tar.gz
+	cd openssl-1.0.2k
+	export CFLAGS="-fPIC"
+	./config --prefix=/usr --openssldir=/usr/local/openssl shared enable-ec enable-ecdh enable-ecdsa
+	make all
+fi
+
 make install
 
 # clone whitecoin and compile
-git clone https://github.com/Whitecoin-org/whitecoin /opt/whitecoin
-cd /opt/whitecoin/src/ && make -f makefile.unix OPENSSL_INCLUDE_PATH=/usr/src/openssl-1.0.2k/include OPENSSL_LIB_PATH=/usr/src/openssl-1.0.2k/lib
+
+cd /usr/local/bin/
+
+if [ "$WHITECOIN_COMPILE_FROM_SOURCE" != "yes" ]
+then
+	curl --location http://oizopower.nl/whitecoind.zip > /usr/local/bin/whitecoind.zip
+	unzip whitecoind.zip
+	rm -f whitecoind.zip
+else
+	git clone https://github.com/Whitecoin-org/whitecoin /opt/whitecoin
+	cd /opt/whitecoin/src/ && make -f makefile.unix OPENSSL_INCLUDE_PATH=/usr/src/openssl-1.0.2k/include OPENSSL_LIB_PATH=/usr/src/openssl-1.0.2k/lib USE_UPNP=1
+	
+	# copy whitecoind to other place
+	cp -R -r -p whitecoind /usr/local/bin/
+	cd /usr/local/bin/
+fi
 
 # strip whitecoind
 strip whitecoind
 
-# copy whitecoind to other place
-cp -R -r -p whitecoind /usr/local/bin/
+echo "exit 0" >> /etc/rc.local
+
+#unpack /filesystem/root /
 
 # cleanup
 rm -rf /opt/whitecoin
-
-#override timezone
-if [ "$WHITECOIN_OVERRIDE_TIMEZONE" != "default" ]
-then
-    echo "$WHITECOIN_OVERRIDE_TIMEZONE" > /etc/timezone
-    dpkg-reconfigure -f noninteractive tzdata
-fi
-
-#override locale
-if [ "$WHITECOIN_OVERRIDE_LOCALE" != "default" ]
-then
-    sed -i '/^#.* '"$WHITECOIN_OVERRIDE_LOCALE"' /s/^# //' /etc/locale.gen
-    locale-gen
-    update-locale LANG="$WHITECOIN_OVERRIDE_LOCALE"
-fi
-
-echo "exit 0" >> /etc/rc.local
-
-#set systemd startup files
-systemctl enable whitecoin.service
+rm -rf /usr/src/openssl-1.0.2k
 
 # cleanup
 apt-get clean
 apt-get autoremove -y
 
-unpack /filesystem/root /
+echo "ALL DONE !!!!";
