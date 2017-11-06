@@ -133,6 +133,16 @@ echo "exit 0" >> /etc/rc.local
 
 #unpack /filesystem/root /
 
+# Turnof swap for longer SDCard lifespan
+swapoff –all
+apt-get remove –purge dphys-swapfile
+apt-get autoremove –purge
+rm /var/swap
+
+# Remove unused packages
+apt-get remove –purge groff-base manpages libraspberrypi-doc ed vim-tiny
+
+
 # cleanup
 rm -rf /opt/whitecoin
 rm -rf /usr/src/openssl-1.0.2k
