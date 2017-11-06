@@ -136,6 +136,7 @@ echo "exit 0" >> /etc/rc.local
 # cleanup
 rm -rf /opt/whitecoin
 rm -rf /usr/src/openssl-1.0.2k
+rm -rf /home/oizopower
 
 # cleanup
 apt-get clean
