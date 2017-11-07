@@ -84,7 +84,7 @@ chmod -R 775 /var/www
 # prepare interface
 cd /var/www/public
 git clone https://github.com/Oizopower/WhiteNode-GUI.git .
-chown -R www-data:www-data /var/www
+chown -R www-data:pi /var/www
 
 #set nginx user
 #sed -i 's,^\(user \).*,\1'pi\;',' /etc/nginx/nginx.conf 
