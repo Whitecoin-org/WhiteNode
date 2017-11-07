@@ -84,12 +84,12 @@ chmod -R 775 /var/www
 # prepare interface
 cd /var/www/public
 git clone https://github.com/Oizopower/WhiteNode-GUI.git .
-chown -R pi:pi /var/www
+chown -R www-data:www-data /var/www
 
 #set nginx user
-sed -i 's,^\(user \).*,\1'pi\;',' /etc/nginx/nginx.conf
-sed -i 's,^\(user \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
-sed -i 's,^\(group \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
+#sed -i 's,^\(user \).*,\1'pi\;',' /etc/nginx/nginx.conf 
+#sed -i 's,^\(user \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
+#sed -i 's,^\(group \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
 
 # compile openssl from source
 cd /usr/src
