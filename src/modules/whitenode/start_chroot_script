@@ -88,6 +88,8 @@ chown -R pi:pi /var/www
 
 #set nginx user
 sed -i 's,^\(user \).*,\1'pi\;',' /etc/nginx/nginx.conf
+sed -i 's,^\(user \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
+sed -i 's,^\(group \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
 
 # compile openssl from source
 cd /usr/src
