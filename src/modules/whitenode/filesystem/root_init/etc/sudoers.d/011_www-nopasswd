@@ -1,1 +1,1 @@
-www-data ALL=NOPASSWD: /sbin/halt, /sbin/reboot, /sbin/poweroff
+www-data ALL=NOPASSWD: /sbin/halt, /sbin/reboot, /sbin/poweroff, /sbin/shutdown
