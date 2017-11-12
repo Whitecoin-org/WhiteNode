@@ -15,9 +15,9 @@ if [ -f /boot/wallet/wallet.dat ]; then
 		if [ -f /home/pi/.whitecoin-xwc/wallet.dat ]; then
 			DATE=`date '+%Y%m%d%H%M%S'`
 		
-			mv /home/pi/.whitecoin-xwc/wallet.dat /home/pi/.whitecoin-xwc/wallet_${DATE}.dat
+			sudo mv /home/pi/.whitecoin-xwc/wallet.dat /home/pi/.whitecoin-xwc/wallet_${DATE}.dat
 		fi
 		
-		mv /boot/wallet/wallet.dat /home/pi/.whitecoin-xwc/wallet.dat
-		chown pi.pi /home/pi/.whitecoin-xwc/wallet.dat
+		sudo mv /boot/wallet/wallet.dat /home/pi/.whitecoin-xwc/wallet.dat
+		sudo chown pi.pi /home/pi/.whitecoin-xwc/wallet.dat
 fi
