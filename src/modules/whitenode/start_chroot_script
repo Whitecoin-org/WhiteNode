@@ -18,21 +18,26 @@ unpack /filesystem/root_init /
 apt-get update -y
 apt-get upgrade -y
 
-#install needed files
-apt-get install -y ntp unzip git build-essential libdb-dev libdb++-dev libboost-all-dev libqrencode-dev miniupnpc libminiupnpc-dev zlib1g-dev pwgen libssl-dev python-pip
+#set cron for backups
+crontab -l -u pi | echo "0 0 * * * sh /home/pi/scripts/backupwallet >/dev/null 2>&1" | crontab -u pi -
 
-# install PHP 7 and NGINX from Stretch Repo
-apt-get install -t stretch -y php7.0 php7.0-curl php7.0-gd php7.0-fpm php7.0-cli php7.0-opcache php7.0-mbstring php7.0-xml php7.0-zip php7.0-intl nginx-light
+#install needed files
+apt-get install -y ntp unzip git build-essential libdb-dev libdb++-dev libboost-all-dev libqrencode-dev miniupnpc libminiupnpc-dev zlib1g-dev pwgen libssl1.0-dev instead of libssl-dev python-pip php7.0 php7.0-curl php7.0-gd php7.0-fpm php7.0-cli php7.0-opcache php7.0-mbstring php7.0-xml php7.0-zip php7.0-intl nginx-light zip
 
 # set correct timezone
 pip install -U tzupdate
+
+#set config permissions
+sed -i 's,^\(user \).*,\1'pi\;',' /etc/nginx/nginx.conf
+sed -i 's,^\(user = \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
+sed -i 's,^\(group = \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
 
 #update startup scripts
 update-rc.d nginx defaults
 update-rc.d php7.0-fpm defaults
 
 # Generate RPC first Boot
-chmod +x /home/pi/scripts/firstboot
+chmod +x /home/pi/scripts/firstboot /home/pi/scripts/backupwallet
 systemctl enable whitenode_first_boot.service
 
 # Startup Whitecoin service
@@ -46,6 +51,9 @@ server {
         listen [::]:80 default_server;
 
         root /var/www/public;
+
+        error_log /var/www/logs/error_log;
+        access_log /var/log/nginx/access.log;
 
         index index.html index.htm index.php default.html;
 
@@ -73,23 +81,23 @@ server {
         location ~ /\.ht {
                 deny all;
         }
+	location ~ /\.git {
+		deny all;
+	}
 }
 
 EOF
 
-#create nginx docroot folders and set permissions
+#create nginx docroot folders
 mkdir -p /var/www/{public,private,logs,backup,vhosts}
-chmod -R 775 /var/www
 
 # prepare interface
 cd /var/www/public
 git clone https://github.com/Oizopower/WhiteNode-GUI.git .
-chown -R www-data:pi /var/www
 
-#set nginx user
-#sed -i 's,^\(user \).*,\1'pi\;',' /etc/nginx/nginx.conf 
-#sed -i 's,^\(user \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
-#sed -i 's,^\(group \).*,\1'pi',' /etc/php/7.0/fpm/pool.d/www.conf
+#set permissions
+sudo chown pi:pi -R /var/www
+sudo usermod -a -G www-data pi
 
 # compile openssl from source
 cd /usr/src
@@ -100,9 +108,9 @@ then
 	unzip openssl-1.0.2k.zip
 	cd openssl-1.0.2k
 else
-	wget https://www.openssl.org/source/openssl-1.0.2k.tar.gz
-	tar zxvf openssl-1.0.2k.tar.gz
-	cd openssl-1.0.2k
+	wget https://www.openssl.org/source/openssl-1.0.2m.tar.gz
+	tar zxvf openssl-1.0.2m.tar.gz
+	cd openssl-1.0.2m
 	export CFLAGS="-fPIC"
 	./config --prefix=/usr --openssldir=/usr/local/openssl shared enable-ec enable-ecdh enable-ecdsa
 	make all
@@ -122,7 +130,7 @@ then
 else
 	git clone https://github.com/Whitecoin-org/whitecoin /opt/whitecoin
 	cd /opt/whitecoin/src/ && make -f makefile.unix OPENSSL_INCLUDE_PATH=/usr/src/openssl-1.0.2k/include OPENSSL_LIB_PATH=/usr/src/openssl-1.0.2k/lib USE_UPNP=1
-	
+
 	# copy whitecoind to other place
 	cp -R -r -p whitecoind /usr/local/bin/
 	cd /usr/local/bin/
@@ -143,7 +151,6 @@ rm /var/swap
 
 # Remove unused packages
 apt-get remove –purge groff-base manpages libraspberrypi-doc ed vim-tiny
-
 
 # cleanup
 rm -rf /opt/whitecoin
