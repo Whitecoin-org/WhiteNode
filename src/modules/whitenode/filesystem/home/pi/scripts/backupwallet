@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# Performs backup of whitecoin wallet.
+#
+# Written by: Oizopower
+
+#
+# Standard Options
+#
+
+TS=$(date "+%Y%m%d-%H%M")
+BACKUPDIR=~/backups/
+WALLET=${BACKUPDIR}wallet-${TS}
+WHITECOIN=/usr/local/bin/whitecoind
+PASSWORD=$(awk -v FS="rpcpassword=" 'NF>1{print $2}' ~/.whitecoin-xwc/whitecoin.conf)
+
+#check if dir
+if [ ! -d "$DIRECTORY" ]; then
+  mkdir $BACKUPDIR
+fi
+
+# Perform the backup.
+echo -n Making backup...
+$WHITECOIN backupwallet $WALLET
+zip --password $PASSWORD $WALLET.zip $WALLET
+
+#cleanup
+find ${BACKUPDIR} -type f ! -iname "*.zip" -delete
+find ${BACKUPDIR}* -mtime +30 -exec rm {} \;
+
+echo done.
+
+exit 0
+
