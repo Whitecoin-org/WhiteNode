@@ -119,7 +119,7 @@ sudo usermod -a -G www-data pi
 
 # Generate default SSL certificate
 mkdir -p /etc/nginx/ssl/
-openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -out /etc/nginx/ssl/whitenode.crt -keyout /etc/nginx/ssl/whitenode.key
+openssl req -x509 -nodes -days 3650 -subj "/C=US/ST=Whitecoin/L=Whitecoin/O=Whitecoin/CN=whitenode.local" -newkey rsa:2048 -out /etc/nginx/ssl/whitenode.crt -keyout /etc/nginx/ssl/whitenode.key
 
 # clone whitecoin and compile
 git clone https://github.com/Whitecoin-org/whitecoin /opt/whitecoin
