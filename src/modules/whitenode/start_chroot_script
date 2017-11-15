@@ -22,7 +22,7 @@ apt-get upgrade -y
 crontab -l -u pi | echo "0 0 * * * sh /home/pi/scripts/backupwallet >/dev/null 2>&1" | crontab -u pi -
 
 #install needed files
-apt-get install -y ntp unzip git build-essential libdb-dev libdb++-dev libboost-all-dev libqrencode-dev miniupnpc libminiupnpc-dev zlib1g-dev pwgen libssl1.0-dev instead of libssl-dev python-pip php7.0 php7.0-curl php7.0-gd php7.0-fpm php7.0-cli php7.0-opcache php7.0-mbstring php7.0-xml php7.0-zip php7.0-intl nginx-light zip
+apt-get install -y ntp unzip git build-essential libdb-dev libdb++-dev libboost-all-dev libqrencode-dev miniupnpc libminiupnpc-dev zlib1g-dev pwgen libssl1.0-dev python-pip php7.0 php7.0-curl php7.0-gd php7.0-fpm php7.0-cli php7.0-opcache php7.0-mbstring php7.0-xml php7.0-zip php7.0-intl nginx-light zip
 
 # set correct timezone
 pip install -U tzupdate
@@ -47,8 +47,17 @@ systemctl enable whitecoin.service
 cat > /etc/nginx/sites-enabled/default << "EOF"
 # Default server configuration
 server {
-        listen 80 default_server;
-        listen [::]:80 default_server;
+	listen 80 default_server;
+	listen [::]:80 default_server;
+	server_name _;
+	return 301 https://$host$request_uri;
+}
+
+server {
+        listen 443 ssl;
+		
+        ssl_certificate /etc/nginx/ssl/whitenode.crt;
+        ssl_certificate_key /etc/nginx/ssl/whitenode.key;
 
         root /var/www/public;
 
@@ -60,6 +69,14 @@ server {
         server_name _;
 
         location / {
+		
+				# allow local networks
+                allow   192.168.0.0/16;
+                allow   10.0.0.0/16;
+                allow   172.16.0.0/16;
+                # drop rest of the world
+                deny    all;
+
                 if (-f $request_filename) {
                     break;
                 }
@@ -71,6 +88,10 @@ server {
                 include snippets/fastcgi-php.conf;
                 fastcgi_pass unix:/run/php/php7.0-fpm.sock;
         }
+		
+		location ~* \.(git|rb|inc|ht|ini)$ {
+                deny all;
+        }
 
          location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
                 expires max;
@@ -81,9 +102,6 @@ server {
         location ~ /\.ht {
                 deny all;
         }
-	location ~ /\.git {
-		deny all;
-	}
 }
 
 EOF
@@ -99,42 +117,17 @@ git clone https://github.com/Oizopower/WhiteNode-GUI.git .
 sudo chown pi:pi -R /var/www
 sudo usermod -a -G www-data pi
 
-# compile openssl from source
-cd /usr/src
-
-if [ "$WHITECOIN_COMPILE_FROM_SOURCE" != "yes" ]
-then
-	curl --location http://oizopower.nl/openssl-1.0.2k.zip > /usr/src/openssl-1.0.2k.zip
-	unzip openssl-1.0.2k.zip
-	cd openssl-1.0.2k
-else
-	wget https://www.openssl.org/source/openssl-1.0.2m.tar.gz
-	tar zxvf openssl-1.0.2m.tar.gz
-	cd openssl-1.0.2m
-	export CFLAGS="-fPIC"
-	./config --prefix=/usr --openssldir=/usr/local/openssl shared enable-ec enable-ecdh enable-ecdsa
-	make all
-fi
-
-make install
+# Generate default SSL certificate
+mkdir -p /etc/nginx/ssl/
+openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -out /etc/nginx/ssl/whitenode.crt -keyout /etc/nginx/ssl/whitenode.key
 
 # clone whitecoin and compile
+git clone https://github.com/Whitecoin-org/whitecoin /opt/whitecoin
+cd /opt/whitecoin/src/ && make -f makefile.unix USE_UPNP=1
 
+# copy whitecoind to other place
+cp -R -r -p whitecoind /usr/local/bin/
 cd /usr/local/bin/
-
-if [ "$WHITECOIN_COMPILE_FROM_SOURCE" != "yes" ]
-then
-	curl --location http://oizopower.nl/whitecoind.zip > /usr/local/bin/whitecoind.zip
-	unzip whitecoind.zip
-	rm -f whitecoind.zip
-else
-	git clone https://github.com/Whitecoin-org/whitecoin /opt/whitecoin
-	cd /opt/whitecoin/src/ && make -f makefile.unix OPENSSL_INCLUDE_PATH=/usr/src/openssl-1.0.2k/include OPENSSL_LIB_PATH=/usr/src/openssl-1.0.2k/lib USE_UPNP=1
-
-	# copy whitecoind to other place
-	cp -R -r -p whitecoind /usr/local/bin/
-	cd /usr/local/bin/
-fi
 
 # strip whitecoind
 strip whitecoind
@@ -143,18 +136,8 @@ echo "exit 0" >> /etc/rc.local
 
 #unpack /filesystem/root /
 
-# Turnof swap for longer SDCard lifespan
-swapoff –all
-apt-get remove –purge dphys-swapfile
-apt-get autoremove –purge
-rm /var/swap
-
-# Remove unused packages
-apt-get remove –purge groff-base manpages libraspberrypi-doc ed vim-tiny
-
 # cleanup
 rm -rf /opt/whitecoin
-rm -rf /usr/src/openssl-1.0.2k
 rm -rf /home/oizopower
 
 # cleanup
