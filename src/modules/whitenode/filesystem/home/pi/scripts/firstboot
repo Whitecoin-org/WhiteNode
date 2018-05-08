@@ -22,3 +22,7 @@ if [ -f /boot/wallet/wallet.dat ]; then
 		sudo mv /boot/wallet/wallet.dat /home/pi/.whitecoin-xwc/wallet.dat
 		sudo chown pi.pi /home/pi/.whitecoin-xwc/wallet.dat
 fi
+
+if [ -f /var/www/public/.reboot ]; then
+    rm -f /var/www/public/.reboot
+fi
