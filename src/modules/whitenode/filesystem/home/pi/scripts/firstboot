@@ -8,8 +8,12 @@ rpcpassword=$rpcp" >> /home/pi/.whitecoin-xwc/whitecoin.conf
 	
 	sudo tzupdate
 	sudo openssl req -x509 -nodes -days 3650 -subj "/C=US/ST=Whitecoin/L=Whitecoin/O=Whitecoin/CN=whitenode.local" -newkey rsa:2048 -out /etc/nginx/ssl/whitenode.crt -keyout /etc/nginx/ssl/whitenode.key
+
+        sudo update-rc.d ssh disable
+        sudo invoke-rc.d ssh stop
+        sudo echo "sshserver=off" >> /boot/config.txt
 	
-    sudo touch /etc/firstboot
+        sudo touch /etc/firstboot
 fi
 
 if [ -f /boot/wallet/wallet.dat ]; then
