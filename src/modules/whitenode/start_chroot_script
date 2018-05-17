@@ -24,6 +24,13 @@ crontab -l -u pi | echo "0 0 * * * sh /home/pi/scripts/backupwallet >/dev/null 2
 #install needed files
 apt-get install -y ntp unzip git build-essential libdb-dev libdb++-dev libboost-all-dev libqrencode-dev miniupnpc libminiupnpc-dev zlib1g-dev pwgen libssl1.0-dev python-pip php7.0 php7.0-curl php7.0-gd php7.0-fpm php7.0-cli php7.0-opcache php7.0-mbstring php7.0-xml php7.0-zip php7.0-intl nginx-light zip
 
+# add latest blockchain files
+cd /home/pi/.whitecoin-xwc
+wget /home/pi/.whitecoin-xwc/ https://github.com/Whitecoin-org/xwc-blockchain/releases/download/latest/xwc-blockchain.zip
+unzip xwc-blockchain.zip
+rm -f xwc-blockchain.zip
+chown pi.pi *
+
 # set correct timezone
 pip install -U tzupdate
 
