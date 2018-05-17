@@ -1,3 +1,4 @@
 export DIST_NAME=whitenode
 export DIST_VERSION=0.2.5
 export MODULES="base(network,whitenode)"
+BASE_IMAGE_ENLARGEROOT=750
