@@ -29,7 +29,7 @@ cd /home/pi/.whitecoin-xwc
 wget https://github.com/Whitecoin-org/xwc-blockchain/releases/download/latest/xwc-blockchain.zip
 /usr/bin/unzip xwc-blockchain.zip
 rm -f xwc-blockchain.zip
-chown pi.pi *
+chown -R pi.pi *
 
 # set correct timezone
 pip install -U tzupdate
