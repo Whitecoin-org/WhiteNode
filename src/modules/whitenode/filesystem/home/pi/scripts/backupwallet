@@ -14,8 +14,8 @@ WALLET=${BACKUPDIR}wallet-${TS}
 WHITECOIN=/usr/local/bin/whitecoind
 PASSWORD=$(awk -v FS="rpcpassword=" 'NF>1{print $2}' ~/.whitecoin-xwc/whitecoin.conf)
 
-#check if dir
-if [ ! -d "$DIRECTORY" ]; then
+# check if dir
+if [ ! -d "$BACKUPDIR" ]; then
   mkdir $BACKUPDIR
 fi
 
@@ -31,4 +31,3 @@ find ${BACKUPDIR}* -mtime +30 -exec rm {} \;
 echo done.
 
 exit 0
-
