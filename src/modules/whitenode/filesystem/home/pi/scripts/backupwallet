@@ -22,7 +22,7 @@ fi
 # Perform the backup.
 echo -n Making backup...
 $WHITECOIN backupwallet $WALLET
-zip --password $PASSWORD $WALLET.zip $WALLET
+zip --password ${PASSWORD:0:12} $WALLET.zip $WALLET
 
 #cleanup
 find ${BACKUPDIR} -type f ! -iname "*.zip" -delete
