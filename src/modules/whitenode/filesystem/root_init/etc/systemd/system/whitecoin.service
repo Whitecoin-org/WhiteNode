@@ -9,8 +9,8 @@ User=pi
 Group=pi
 
 Type=forking
-ExecStart=/usr/local/bin/nyeriumd -daemon
-ExecStop=/usr/local/bin/nyerium-cli stop
+ExecStart=/usr/local/bin/whitecoind
+ExecStop=/usr/local/bin/whitecoind stop
 
 Restart=always
 RestartSec=5
