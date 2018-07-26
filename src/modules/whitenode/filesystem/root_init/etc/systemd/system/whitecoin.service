@@ -2,13 +2,23 @@
 Description=Whitecoin Mainnet Client
 After=network.target
 
+;; configuration files reside in .nyerium folder of the user
+;; -> whitecoin.conf (contains wallet configuration)
 [Service]
-ExecStart=/bin/sh -ec "exec whitecoind"
-Type=forking
 User=pi
 Group=pi
-Restart=on-failure
+
+Type=forking
+ExecStart=/usr/local/bin/nyeriumd -daemon
+ExecStop=/usr/local/bin/nyerium-cli stop
+
+Restart=always
 RestartSec=5
+PrivateTmp=True
+TimeoutStopSec=60s
+TimeoutStartSec=60s
+StartLimitInterval=120s
+StartLimitBurst=15
 
 [Install]
 WantedBy=multi-user.target
